@@ -1,0 +1,38 @@
+import datetime
+
+# Function to start a server if it was running within the last 0-15 minutes
+def start_server_if_recently_running(server_name):
+    try:
+        print("Starting server:", server_name)
+        server_status = nmServerStatus(server_name)
+        if server_status != "RUNNING":
+            # Check if the server was running within the last 0-15 minutes
+            last_start_time = nmServerLastStartTime(server_name)
+            current_time = datetime.datetime.now()
+            time_diff = current_time - last_start_time
+            if time_diff.total_seconds() <= 900:  # 900 seconds = 15 minutes
+                start(server_name, 'Server', block='true')
+                print("Server started successfully.")
+            else:
+                print("Server was not running within the last 0-15 minutes.")
+        else:
+            print("Server is already running.")
+    except:
+        print("Error starting server:", server_name)
+
+# Connect to the WebLogic Admin Server
+connect('weblogic', 'weblogic@123', 't3://192.168.30.104:7001')
+
+# Get the name of the target machine
+target_machine = 'Machine-0'
+
+# Get the servers on the target machine
+servers = cmo.getServers()
+for server in servers:
+    server_name = server.getName()
+    server_machine = server.getMachine()
+    if server_machine is not None and server_machine.getName() == target_machine:
+        start_server_if_recently_running(server_name)
+
+# Disconnect from the server
+disconnect()
